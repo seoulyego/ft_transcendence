@@ -1,0 +1,145 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id             Int            @id
+  name           String?        @db.VarChar(100)
+  profile_image  String?        @db.VarChar(255)
+  email          String?        @db.VarChar(255)
+  is_2fa         Boolean?
+  status         Status?
+  friends        Friends[]      @relation("Friends_user_id_ToUsers")
+  friendOf       Friends[]      @relation("Friends_friend_id_ToUsers")
+  blocked_users  BlockedUsers[] @relation("Blocked_user_id_ToUsers")
+  blocked_by     BlockedUsers[] @relation("Blocked_by_id_ToUsers")
+  channelUsers   ChannelUsers[]
+  chats          Chat[]
+  sentRequests   FriendRequests[] @relation("FriendRequests_sender_id_ToUsers")
+  receivedRequests FriendRequests[] @relation("FriendRequests_receiver_id_ToUsers")
+  gamesAsPlayer1   Games[] @relation("Games_player1_id_ToUsers")
+  gamesAsPlayer2   Games[] @relation("Games_player2_id_ToUsers")
+  @@unique([name])
+}
+
+
+enum Status {
+  online
+  offline
+  in_game
+}
+
+model Friends {
+  id        Int   @id @default(autoincrement())
+  user_id   Int
+  friend_id Int
+  user      Users @relation(fields: [user_id], references: [id], name: "Friends_user_id_ToUsers")
+  friend    Users @relation(fields: [friend_id], references: [id], name: "Friends_friend_id_ToUsers")
+
+  @@unique([user_id, friend_id])
+}
+
+model FriendRequests {
+  id          Int                   @id @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      FriendRequestStatus
+  sender      Users                 @relation(fields: [sender_id], references: [id], name: "FriendRequests_sender_id_ToUsers")
+  receiver    Users                 @relation(fields: [receiver_id], references: [id], name: "FriendRequests_receiver_id_ToUsers")
+
+  @@unique([sender_id, receiver_id])
+}
+
+enum FriendRequestStatus {
+  pending
+  accepted
+  declined
+}
+
+
+model BlockedUsers {
+  id        Int @id @default(autoincrement())
+  user_id   Int
+  blocked_by Int
+  user      Users @relation(fields: [user_id], references: [id], name: "Blocked_user_id_ToUsers")
+  subject   Users @relation(fields: [blocked_by], references: [id], name: "Blocked_by_id_ToUsers")
+
+  @@unique([user_id, blocked_by])
+}
+
+model Channels {
+  id             Int             @id @default(autoincrement())
+  password       String?         @db.VarChar(255)
+  name           String          @db.VarChar(25)
+  channelOptions ChannelOptions?
+  channelUsers   ChannelUsers[]
+  chats          Chat[]
+  @@unique([name])
+}
+
+enum ChannelOption {
+  PUBLIC
+  PRIVATE
+  DM
+}
+
+model ChannelOptions {
+  channel_id Int
+  option     ChannelOption?
+  channel    Channels @relation(fields: [channel_id], references: [id])
+
+  @@id([channel_id])
+}
+
+model ChannelUsers {
+  channel_id Int
+  user_id    Int
+  admin      Boolean
+  owner      Boolean
+  channel    Channels @relation(fields: [channel_id], references: [id])
+  user       Users    @relation(fields: [user_id], references: [id])
+
+  @@id([user_id, channel_id])
+}
+
+model ChannelBans {
+  channel_id Int
+  user_id    Int
+
+  @@id([channel_id, user_id])
+}
+
+model ChannelMutes {
+  channel_id Int
+  user_id    Int
+  until      DateTime
+
+  @@id([channel_id, user_id])
+}
+
+model Chat {
+  id         Int      @id @default(autoincrement())
+  channel_id Int
+  sent_by_id    Int
+  message    String   @db.Text
+  channel    Channels @relation(fields: [channel_id], references: [id])
+  sent_by       Users    @relation(fields: [sent_by_id], references: [id])
+}
+
+model Games {
+  id          Int      @id @default(autoincrement())
+  player1_id  Int
+  player2_id  Int
+  score1      Int
+  score2      Int
+  player1     Users    @relation(fields: [player1_id], references: [id], name: "Games_player1_id_ToUsers")
+  player2     Users    @relation(fields: [player2_id], references: [id], name: "Games_player2_id_ToUsers")
+}
