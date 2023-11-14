@@ -1,6 +1,6 @@
 "use client";
 
-// import "./globals.css";
+import "./globals.css";
 import { Inter } from "next/font/google";
 import LeftSide from "@/components/server/LeftSide";
 import RightSide from "@/components/server/RightSide";
@@ -92,24 +92,51 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {accessToken.raw ? (
-          <NotificationProvider>
+      {accessToken.raw ? pageName != "game" ? (
+        <body className={inter.className}>
+        
+        <NotificationProvider>
             <SocketProvider>
-              <ToastContainer />
+              <ToastContainer
+                theme="dark"
+              />
               <InviteModal />
               <TopNavigator />
-              <div className="main">
-                <LeftSide />
-                <div className="center">{children}</div>
-                <RightSide />
-              </div>
-            </SocketProvider>
+          <div className="main">
+            <LeftSide />
+            <div className="center">{children}</div>
+            <RightSide />
+          </div>
+          </SocketProvider>
           </NotificationProvider>
-        ) : (
-          <a href={`${process.env.NEXT_PUBLIC_API_URL}/auth`}>로그인 하기</a>
-        )}
-      </body>
-    </html>
-  );
+        </body> ) :(<body className={inter.className}>
+        
+        <NotificationProvider>
+            <SocketProvider>
+            <ToastContainer
+                theme="dark"
+              />
+            <div className="gamecenter">{children}</div>
+          </SocketProvider>
+          </NotificationProvider>
+        </body>) : (
+                  <body
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "1024px",
+                      height: "768px",
+                      minHeight: "768px",
+                      border: "1px solid white",
+                      margin: "auto",
+                      flexDirection: "column",
+                      overflow: "hidden",
+                      
+                    }}
+              ><a href={`${process.env.NEXT_PUBLIC_API_URL}/auth`}>로그인 하기</a></body>
+                )}
+              </html>
+          );
 }
+        

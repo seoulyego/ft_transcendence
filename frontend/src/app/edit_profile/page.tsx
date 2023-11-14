@@ -47,6 +47,7 @@ export default function EditProfile() {
       })
       .catch((error: AxiosError) => {
         console.error(error);
+        toast.error((error.response?.data as { message: string })?.message);
       });
   };
 
@@ -73,6 +74,11 @@ export default function EditProfile() {
       is_2fa: is2fa,
       profile_image: profileImage,
     };
+
+    if (!name || !email || !profileImage) {
+      toast.error("모든 필드를 입력해주세요.");
+      return;
+    }
     axios
       .post(`${process.env.NEXT_PUBLIC_API_URL}/users/me/update`, updateData, {
         headers: {
@@ -86,11 +92,13 @@ export default function EditProfile() {
       })
       .catch((error: AxiosError) => {
         console.error(error);
+        toast.error((error.response?.data as { message: string })?.message);
       });
   };
 
   return (
-    <div>
+    <div className="myPage">
+      <h2>마이페이지</h2>
       <img
         src={userData.profile_image}
         width={100}
@@ -134,7 +142,6 @@ export default function EditProfile() {
           value={profileImage}
           onChange={(e) => setProfileImage(e.target.value)}
         />
-
         <br />
         <button type="submit">저장하기</button>
       </form>

@@ -48,11 +48,37 @@ export class UsersService {
 
   async updateUser(id: number, userData: UpdateUserDto) {
     try {
+      const user = await this.getUser(id);
       if (userData.name) {
-        let editedName = userData.name;
-        userData.name = encodeURIComponent(editedName.trim().replace(/\s+/g, ''));
+        let editedName = userData.name.trim().replace(/\s+/g, '');
+        // Check if the name contains only English letters and digits
+        if (!/^[a-zA-Z0-9]*$/.test(editedName)) {
+          throw new BadRequestException('이름은 영어와 숫자만 포함해야 합니다');
+        }
+        userData.name = editedName;
         if (userData.name.length === 0)
-          throw new BadRequestException("적절한 이름을 입력하세요");
+          throw new BadRequestException('적절한 이름을 입력하세요');
+        const dmChannel = await this.prisma.channels.findFirst({
+          where: {
+            name: {
+              startsWith: 'DM:',
+              contains: user.name,
+            },
+          },
+        });
+        if (dmChannel) {
+          let channelUsers = await this.prisma.channelUsers.findMany({
+            where: { channel_id: dmChannel.id },
+          });
+          channelUsers = channelUsers.filter(
+            (channelUser) => channelUser.user_id !== id,
+          );
+          const otherUserName = await this.getUser(channelUsers[0].user_id);
+          await this.prisma.channels.update({
+            where: { id: dmChannel.id },
+            data: { name: `DM: ${userData.name}, ${otherUserName.name}` },
+          });
+        }
       }
       return await this.prisma.users.update({
         where: { id: id },
@@ -60,9 +86,7 @@ export class UsersService {
       });
     } catch (error) {
       console.error(error);
-      if (error)
-        throw error;
-      throw new BadRequestException(`유저 정보 수정 실패`);
+      throw error;
     }
   }
 

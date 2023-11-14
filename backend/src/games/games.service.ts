@@ -144,18 +144,23 @@ export class GamesService {
   async customGame(client: ExtendedSocket, userId: string) {
     const user = await this.usersService.getUser(parseInt(userId));
     if (user.status === 'in_game') {
-      throw new BadRequestException(
-        `게임 중에는 커스텀 게임을 할 수 없습니다.`,
-      );
+      const payload: NotificationPayload = {
+        type: 'USER_IN_GAME',
+        channelId: null,
+        userId: client.user.sub,
+        message: `상대가 게임 중입니다.`,
+      };
+      this.notification.sendNotificationToUser(client.user.sub, payload);
+    } else {
+      const room = this.createRoom(client, true);
+      const payload: NotificationPayload = {
+        type: 'INVITE_CUSTOM_GAME',
+        channelId: room.id,
+        userId: client.user.sub,
+        message: `커스텀 게임 초대가 왔습니다.`,
+      };
+      this.notification.sendNotificationToUser(parseInt(userId), payload);
     }
-    const room = this.createRoom(client, true);
-    const payload: NotificationPayload = {
-      type: 'INVITE_CUSTOM_GAME',
-      channelId: room.id,
-      userId: client.user.sub,
-      message: `커스텀 게임 초대가 왔습니다.`,
-    };
-    this.notification.sendNotificationToUser(parseInt(userId), payload);
   }
 
   joinCustomGame(client: ExtendedSocket, roomID: string) {
@@ -267,12 +272,7 @@ export class GamesService {
           }
         }
         if (playerLength === 2) {
-          joinedRoom.players.forEach((p) => {
-            const socket = this.server.sockets.sockets.get(p.socketID);
-            if (socket) {
-              this.cancelMatch(socket, joinedRoom.id.toString());
-            }
-          });
+          this.cancelMatch(client, joinedRoom.id.toString());
           if (joinedRoom.spectators) {
             joinedRoom.spectators.forEach((s) => {
               const socket = this.server.sockets.sockets.get(s.socketID);
@@ -358,8 +358,8 @@ export class GamesService {
       if (
         room.ball.x > 100 &&
         room.ball.x < 110 &&
-        room.ball.y > player1.y &&
-        room.ball.y < player1.y + 60
+        room.ball.y > player1.y - 10 &&
+        room.ball.y < player1.y + 70
       ) {
         room.ball.dx *= -1;
         this.adjustBallDirection(room.ball, player1.y, speed);
@@ -369,8 +369,8 @@ export class GamesService {
       if (
         room.ball.x > 680 &&
         room.ball.x < 690 &&
-        room.ball.y > player2.y &&
-        room.ball.y < player2.y + 60
+        room.ball.y > player2.y - 10 &&
+        room.ball.y < player2.y + 70
       ) {
         room.ball.dx *= -1;
         this.adjustBallDirection(room.ball, player2.y, speed);

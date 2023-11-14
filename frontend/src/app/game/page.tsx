@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 import CustomGameModal from "@/components/CustomGameModal";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useNotification } from "@/contexts/NotificationContext";
 import Cookies from "js-cookie";
 
 export default function Game() {
@@ -24,15 +25,36 @@ export default function Game() {
   const [ball, setBall] = useState<Ball | null>(null);
   const [isCustomGameModalOpen, setIsCustomGameModalOpen] = useState(false);
   const [isSpectate, setIsSpectate] = useState(false);
-
   const canvasRef = useRef(null);
   const params = useSearchParams();
+  const {
+    registerNotificationEventHandler,
+    unregisterNotificationEventHandler,
+  } = useNotification();
 
   const router = useRouter();
 
   const userIdParam = params.get("userId");
   const roomIdParam = params.get("roomId");
   const spectateUserId = params.get("spectateUserId");
+
+  useEffect(() => {
+    const handleNotification = (message: any) => {
+      if (message.type == "USER_IN_GAME") {
+        toast.success("3초 뒤 메인페이지로 돌아갑니다");
+
+        setTimeout(() => {
+          router.push("/");
+        }, 3000);
+      }
+    };
+
+    registerNotificationEventHandler(handleNotification);
+
+    return () => {
+      unregisterNotificationEventHandler(handleNotification);
+    };
+  }, [registerNotificationEventHandler, unregisterNotificationEventHandler]);
 
   useEffect(() => {
     if (!socket) return;
@@ -360,13 +382,13 @@ export default function Game() {
   };
 
   return (
-    <div className="container">
+    <div>
       <CustomGameModal
         isOpen={isCustomGameModalOpen}
         onRequestClose={handleClose}
         onSubmit={onSubmitCustomGameSetting}
       />
-      <h1 id="heading">PING PONG</h1>
+      <h1 id="heading">PONG</h1>
       <div className="game">
         <canvas id="canvas" ref={canvasRef} width="800" height="500"></canvas>
         <p id="message"> {message}</p>

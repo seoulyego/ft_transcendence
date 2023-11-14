@@ -1,4 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelOptions } from './enum/channel-options.enum';
@@ -282,7 +287,7 @@ export class ChannelsService {
         },
       });
       if (blocked) throw new HttpException('차단 당했음', HttpStatus.FORBIDDEN);
-      const existingDM = await this.prisma.channels.findFirst({
+      const existingDMByName = await this.prisma.channels.findFirst({
         where: {
           OR: [
             { name: 'DM: ' + creator.name + ', ' + user.name },
@@ -291,7 +296,7 @@ export class ChannelsService {
         },
       });
 
-      if (existingDM)
+      if (existingDMByName)
         throw new HttpException('이미 존재하는 DM', HttpStatus.BAD_REQUEST);
 
       const channel = await this.prisma.channels.create({
@@ -343,6 +348,9 @@ export class ChannelsService {
 
     try {
       let editedName = name;
+      if (!/^[a-zA-Z0-9]*$/.test(editedName)) {
+        throw new BadRequestException('이름은 영어와 숫자만 포함해야 합니다');
+      }
       editedName = editedName.trim().replace(/\s+/g, ' ');
       if (!editedName ?? editedName === '')
         throw new HttpException(
@@ -552,6 +560,9 @@ export class ChannelsService {
     try {
       if (updateData.name) {
         let editedName = updateData.name;
+        if (!/^[a-zA-Z0-9]*$/.test(editedName)) {
+          throw new BadRequestException('이름은 영어와 숫자만 포함해야 합니다');
+        }
         updateData.name = editedName.trim().replace(/\s+/g, ' ');
         if (updateData.name.startsWith('DM:'))
           throw new HttpException(
@@ -781,11 +792,11 @@ export class ChannelsService {
             channel_id_user_id: {
               channel_id: channelId,
               user_id: id,
-            }
-          }
+            },
+          },
         });
         if (existingBan)
-          throw new HttpException("이미 밴 함", HttpStatus.BAD_REQUEST);
+          throw new HttpException('이미 밴 함', HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelBans.create({
           data: {
             channel_id: channelId,
@@ -827,11 +838,11 @@ export class ChannelsService {
             channel_id_user_id: {
               channel_id: channelId,
               user_id: id,
-            }
-          }
+            },
+          },
         });
         if (existingMute)
-          throw new HttpException("이미 뮤트 함", HttpStatus.BAD_REQUEST);
+          throw new HttpException('이미 뮤트 함', HttpStatus.BAD_REQUEST);
         const userState = await this.prisma.channelMutes.create({
           data: {
             channel_id: channelId,
