@@ -24,7 +24,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiProperty({
     description: 'The name of the user',
-    example: 'Kyuhong Han',
+    example: 'Yeongseong Go',
     required: false,
     maxLength: 100,
   })
@@ -44,7 +44,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
   @ApiProperty({
     description: 'The email of the user',
-    example: 'kyhan@sudent.42seoul.kr',
+    example: 'yeongo@sudent.42seoul.kr',
     required: false,
     maxLength: 255,
   })

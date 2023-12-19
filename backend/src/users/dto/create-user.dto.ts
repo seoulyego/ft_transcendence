@@ -21,7 +21,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'The name of the user',
-    example: 'Kyuhong Han',
+    example: 'Yeongseong Go',
     maxLength: 100,
   })
   @IsString()
@@ -39,7 +39,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: 'The email of the user',
-    example: 'kyhan@sudent.42seoul.kr',
+    example: 'yeongo@sudent.42seoul.kr',
     maxLength: 255,
   })
   @IsString()

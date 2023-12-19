@@ -11,6 +11,9 @@ logs:
 up:
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) up
 
+daemon:
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) up -d
+
 down:
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down
 
@@ -22,4 +25,4 @@ fclean: clean
 
 re: down all
 
-.PHONY:	all up down clean fclean re
+.PHONY:	all up daemon down clean fclean re

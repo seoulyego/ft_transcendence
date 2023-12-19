@@ -30,7 +30,7 @@ services:
   database:
     image: postgres
     environment:
-      POSTGRES_USER: kyhan
+      POSTGRES_USER: yeongo
       POSTGRES_PASSWORD: 1234
       POSTGRES_DB: transcendence
     ports:
